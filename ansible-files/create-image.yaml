@@ -14,7 +14,7 @@
 
     args:
 
-      chdir: jenkins-workdir
+      chdir: /project/abc-technologies/
 
 
   - name: push image on to dockerhub
