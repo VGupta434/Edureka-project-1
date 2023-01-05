@@ -1,0 +1,13 @@
+---
+- hosts: master
+  user: edureka
+
+  tasks:
+    - name: create deployment
+      command: kubectl apply -f abc-deployment.yml
+
+    - name: create service
+      command: kubectl apply -f abc-service.yml
+
+    - name: update deployment with new pods if image updated in docker hub
+      command: kubectl rollout restart deployment.apps/abc-deploy
