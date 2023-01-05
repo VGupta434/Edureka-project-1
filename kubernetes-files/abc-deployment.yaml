@@ -17,5 +17,5 @@ spec:
         rsc: pod
     spec:
       containers:
-      - image: ivekgupta434/abcapp-ans:latest
+      - image: vivekgupta434/abcapp-ans:latest
         name: abc-cont
