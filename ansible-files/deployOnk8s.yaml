@@ -5,9 +5,15 @@
   tasks:
     - name: create deployment
       command: kubectl apply -f abc-deployment.yml
+      
+      args:
+      chdir: /project/abc-technologies/kubernetes-files
 
     - name: create service
       command: kubectl apply -f abc-service.yml
+      
+      args:
+      chdir: /project/abc-technologies/kubernetes-files
 
     - name: update deployment with new pods if image updated in docker hub
       command: kubectl rollout restart deployment.apps/abc-deploy
