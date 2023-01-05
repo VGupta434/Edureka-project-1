@@ -10,7 +10,7 @@ spec:
   selector:
     name: abc-svc
   ports:
-    protocol: TCP
-    nodePort: 31000
-    targetPort: 8080
-    port: 80
+  - protocol: TCP
+  - nodePort: 31000
+  - targetPort: 8080
+  - port: 80
