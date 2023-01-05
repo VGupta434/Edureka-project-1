@@ -1,0 +1,30 @@
+---
+
+- hosts: master
+
+  become: true
+
+
+
+  tasks:
+
+  - name: create docker image using war file
+
+    command: docker build -t vivekgupta434/abcapp:latest .
+
+    args:
+
+      chdir: jenkins-workdir
+
+
+  - name: push image on to dockerhub
+
+    command: docker push vivekgupta434/abcapp:latest
+
+
+
+  - name: remove docker images form ansible server
+
+    command: docker image rm vivekgupta434/abcapp:latest
+
+    ignore_errors: yes
