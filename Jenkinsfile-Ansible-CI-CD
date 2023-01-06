@@ -1,0 +1,113 @@
+pipeline
+{
+    agent any
+    
+    tools 
+    {
+        maven 'Jenkins_Maven'
+        git 'Default'
+        jdk 'Jenkins_JAVA'
+    }
+    
+    stages
+    {
+        stage ('FetchRepo')
+        {
+            steps
+            {
+                git 'https://github.com/VGupta434/Edureka-project-1.git'
+            }
+        }
+        
+        stage ('Compile')
+        {
+            steps
+            {
+                echo 'Compiling'
+                sh 'mvn compile'
+            }
+        }
+        
+        stage ('Code Review')
+        {
+            steps
+            {
+                echo 'Reviewing Code'
+                sh 'mvn pmd:pmd'
+            }
+            
+            post
+            {
+                success
+                {
+                    recordIssues(tools: [pmdParser(pattern: 'target/pmd.xml')])
+                }
+            }
+        }
+        
+        stage ('Test')
+        {
+            steps
+            {
+                echo 'Testing'
+                sh 'mvn test'
+            }
+            
+            post
+            {
+                success
+                {
+                    jacoco()
+                }
+            }
+        }
+        
+        stage('package')
+        {
+            steps
+            {
+                echo 'packaging'
+                sh 'mvn package'
+            }
+        }
+        
+        stage('send files to ansible host')
+        {
+            steps
+            {
+                sh 'pwd'
+                sh "sed -i 's/abcapp:latest/abcapp-ans:$BUILD_NUMBER/g' ansible-files/create-image.yaml"
+                sh "sed -i 's/abcapp-ans:latest/abcapp-ans:$BUILD_NUMBER/g' kubernetes-files/abc-deployment.yaml"
+                sshPublisher(publishers: [sshPublisherDesc(configName: 'ansible_host', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: 'mkdir /project/abc-technologies', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '', remoteDirectorySDF: false, removePrefix: '', sourceFiles: '')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
+                sshPublisher(publishers: [sshPublisherDesc(configName: 'ansible_host', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: '', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '//project//abc-technologies//', remoteDirectorySDF: false, removePrefix: 'target/', sourceFiles: 'target/*.war')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: true)])
+                sshPublisher(publishers: [sshPublisherDesc(configName: 'ansible_host', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: '', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '//project//abc-technologies//', remoteDirectorySDF: false, removePrefix: '', sourceFiles: 'ansible-files/*')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: true)])
+                sshPublisher(publishers: [sshPublisherDesc(configName: 'ansible_host', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: '', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '//project//abc-technologies//', remoteDirectorySDF: false, removePrefix: '', sourceFiles: 'Dockerfile')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: true)])
+                sshPublisher(publishers: [sshPublisherDesc(configName: 'ansible_host', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: '', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '//project//abc-technologies//', remoteDirectorySDF: false, removePrefix: '', sourceFiles: 'kubernetes-files/*')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: true)])
+            }
+        }
+        
+        stage ('create image')
+        {
+            steps
+            {
+                sshPublisher(publishers: [sshPublisherDesc(configName: 'ansible_host', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: 'ansible-playbook -i /etc/ansible/hosts /project/abc-technologies/ansible-files/create-image.yaml', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '', remoteDirectorySDF: false, removePrefix: '', sourceFiles: '')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: true)])
+            }
+        }
+        
+        stage ('deploy on k8s')
+        {
+            steps
+            {
+                sshPublisher(publishers: [sshPublisherDesc(configName: 'ansible_host', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: 'ansible-playbook -i /etc/ansible/hosts /project/abc-technologies/ansible-files/deployOnk8s.yaml', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '', remoteDirectorySDF: false, removePrefix: '', sourceFiles: '')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: true)])
+            }
+        }
+        
+        stage ('cleanup')
+        {
+            steps
+            {
+                sshPublisher(publishers: [sshPublisherDesc(configName: 'ansible_host', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: 'rm -rf /project/abc-technologies', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+', remoteDirectory: '', remoteDirectorySDF: false, removePrefix: '', sourceFiles: '')], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: true)])
+            }
+        }
+    }
+}
