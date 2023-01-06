@@ -1,19 +1,23 @@
 ---
 - hosts: master
+  #  become: true
   user: edureka
 
   tasks:
+    - name: check version
+      command: kubectl --kubeconfig /home/edureka/.kube/admin.conf version
+
     - name: create deployment
-      command: kubectl apply -f abc-deployment.yml
+      command: kubectl --kubeconfig /home/edureka/.kube/admin.conf apply -f abc-deployment.yaml
 
       args:
         chdir: /project/abc-technologies/kubernetes-files
 
     - name: create service
-      command: kubectl apply -f abc-service.yml
+      command: kubectl --kubeconfig /home/edureka/.kube/admin.conf apply -f abc-service.yaml
 
       args:
         chdir: /project/abc-technologies/kubernetes-files
 
-    - name: update deployment with new pods if image updated in docker hub
-      command: kubectl rollout restart deployment.apps/abc-deploy
+    - name: update deployment if pods updated in container repository
+      command: kubectl --kubeconfig /home/edureka/.kube/admin.conf rollout restart deployment.apps/abc-deploy
